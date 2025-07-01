@@ -7,6 +7,9 @@ WORKDIR /app
 # Copiar todos los archivos del proyecto al contenedor
 COPY . .
 
+# 👇 Instalar dependencias del proyecto
+RUN flutter pub get
+
 # Construir la app para web (release)
 RUN flutter build web --release
 
