@@ -1,5 +1,5 @@
-# Etapa 1: construir la app con Flutter 3.22 (Dart 3.8)
-FROM ghcr.io/cirruslabs/flutter:3.22
+# Etapa 1: construir la app con Flutter (última versión estable)
+FROM ghcr.io/cirruslabs/flutter:stable
 
 WORKDIR /app
 
