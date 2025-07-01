@@ -20,7 +20,8 @@ void main() {
   runApp(PagosApp());
 }
 
-const String apiBaseUrl = 'https://servicios-app-1.onrender.com/pagosapp/api/';
+const String apiBaseUrl = 'https://servicios-api.onrender.com/';
+
 
 
 class PagosApp extends StatelessWidget {
