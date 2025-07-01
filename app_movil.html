@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Pago de Servicios - App Móvil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 1rem;
+      background: #f0f2f5;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      color: #007bff;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    .mensaje {
+      padding: 1rem;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+    }
+    .error {
+      padding: 1rem;
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+    }
+    .lista {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .lista-item {
+      background: white;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .lista-item strong {
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pago de Servicios</h1>
+  </header>
+
+  <section>
+    <h2>Registrar Pago</h2>
+    <form id="formPago">
+      <input type="text" id="nombre" placeholder="Nombre completo" required />
+      <input type="email" id="email" placeholder="Correo electrónico" required />
+      <input type="text" id="telefono" placeholder="Teléfono (opcional)" />
+      <select id="servicio" required>
+        <option value="">Cargando servicios...</option>
+      </select>
+      <button type="submit">Pagar</button>
+    </form>
+    <div id="mensaje"></div>
+  </section>
+
+  <section>
+    <h2>Historial de Pagos</h2>
+    <div id="historial" class="lista">Cargando historial...</div>
+  </section>
+
+  <script>
+    const apiBase = './api'; 
+
+    async function cargarServicios() {
+      const select = document.getElementById('servicio');
+      try {
+        const res = await fetch(`${apiBase}/servicios.php`);
+        const servicios = await res.json();
+        select.innerHTML = '<option value="">-- Seleccione un servicio --</option>';
+        servicios.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.nombre} - $${parseFloat(s.precio).toFixed(2)}`;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        select.innerHTML = '<option value="">Error al cargar servicios</option>';
+      }
+    }
+
+    async function cargarHistorial() {
+      const cont = document.getElementById('historial');
+      cont.textContent = 'Cargando historial...';
+      try {
+        const res = await fetch(`${apiBase}/pagos.php`);
+        const pagos = await res.json();
+        if (pagos.length === 0) {
+          cont.textContent = 'No hay pagos registrados aún.';
+          return;
+        }
+        cont.innerHTML = '';
+        pagos.forEach(pago => {
+          const div = document.createElement('div');
+          div.className = 'lista-item';
+          div.innerHTML = `<strong>${pago.usuario}</strong> pagó <strong>${pago.servicio}</strong> por $${parseFloat(pago.monto).toFixed(2)} el ${new Date(pago.fecha_pago).toLocaleString()}<br/>Estado: ${pago.estado}`;
+          cont.appendChild(div);
+        });
+      } catch (e) {
+        cont.textContent = 'Error al cargar el historial.';
+      }
+    }
+
+    document.getElementById('formPago').addEventListener('submit', async e => {
+      e.preventDefault();
+      const mensajeDiv = document.getElementById('mensaje');
+      mensajeDiv.textContent = '';
+      mensajeDiv.className = '';
+      const nombre = document.getElementById('nombre').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+      const servicio_id = document.getElementById('servicio').value;
+
+      if (!nombre || !email || !servicio_id) {
+        mensajeDiv.textContent = 'Por favor completa todos los campos obligatorios.';
+        mensajeDiv.className = 'error';
+        return;
+      }
+
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Procesando...';
+
+      try {
+        const res = await fetch(`${apiBase}/registrar_pago.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, telefono, servicio_id })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          mensajeDiv.textContent = data.mensaje || 'Pago registrado con éxito.';
+          mensajeDiv.className = 'mensaje';
+          e.target.reset();
+          cargarHistorial();
+        } else {
+          mensajeDiv.textContent = data.error || 'Error en el registro de pago.';
+          mensajeDiv.className = 'error';
+        }
+      } catch (error) {
+        mensajeDiv.textContent = 'Error de red o servidor.';
+        mensajeDiv.className = 'error';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Pagar';
+    });
+
+    window.onload = () => {
+      cargarServicios();
+      cargarHistorial();
+    };
+  </script>
+</body>
+</html>
