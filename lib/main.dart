@@ -20,7 +20,7 @@ void main() {
   runApp(PagosApp());
 }
 
-const String apiBaseUrl = 'http://localhost/pagosapp/api/';
+const String apiBaseUrl = 'http://localhost/pagosapp/';
 
 class PagosApp extends StatelessWidget {
   final Color primaryColor = Color(0xFF1976D2); 
