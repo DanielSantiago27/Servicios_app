@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 
 Future<void> fetchData() async {
-  final response = await http.get(Uri.parse('http://localhost/api.php'));
+  final response = await http.get(Uri.parse('https://servicios-app-1.onrender.com/api.php'));
 
   if (response.statusCode == 200) {
     List data = json.decode(response.body);
@@ -20,7 +20,8 @@ void main() {
   runApp(PagosApp());
 }
 
-const String apiBaseUrl = 'http://localhost/pagosapp/api/';
+const String apiBaseUrl = 'https://servicios-app-1.onrender.com/pagosapp/api/';
+
 
 class PagosApp extends StatelessWidget {
   final Color primaryColor = Color(0xFF1976D2); 
